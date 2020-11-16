@@ -13,15 +13,21 @@ pd.options.mode.chained_assignment = None
 
 def main():
     # render the readme as markdown using st.markdown
+    if os.path.exists(activities_csv_downloaded):
+        download_to_raw()
+    
     st.markdown(open(readme).read())
 
     # read in our processed activities.csv
-    data = pd.read_csv(activities_csv_processed, index_col='date', parse_dates=True)
+    data = pd.read_csv(activities_csv_raw)
+    data = prep_df(data)
     data = clean_and_convert(data)
     run, bike = split_run_and_bike(data)
     run = clean_run_pace(run)
     bike = clean_bike_pace(bike)
-  
+    last_10 = data[['activity_type', 'distance', 'calories', 'avg_pace']].head(10)
+    st.write(last_10)
+
     types_of_activities = data.activity_type.unique()
     activity_choice = st.selectbox('Select an activity', types_of_activities)
     
@@ -58,10 +64,10 @@ def main():
                         height=700, 
                         width=1200,
                         )
-        if choice == 'avg_pace':
-            fig.update_yaxes(tickformat='%M:%S')
-        elif choice == 'time':
-            fig.update_yaxes(tickformat='%H:%M:%S')
+        #if choice == 'avg_pace':
+            #fig.update_yaxes(tickformat='%M:%S')
+        #elif choice == 'time':
+            #fig.update_yaxes(tickformat='%H:%M:%S')
         
         fig.update_xaxes(tickformat='%m/%d/%Y'),
         st.plotly_chart(fig)
@@ -74,11 +80,24 @@ def clean_and_convert(df):
     df = cols_to_float(df)
     return df
 
+def clean_and_convert(df):
+    df = clean_time(df)
+    df = cols_to_float(df)
+    return df
+
 def clean_run_pace(df):
+    '''
+    Converts our mm:ss string to a datetime object, then back to a string but in HH:MM:SS format since
+    that's what to_timedelta() takes.  
+
+    Time deltas are for durations, while datetimes are for moments in time.      
+    '''
     df.best_pace = df.best_pace.apply(lambda x: dt.datetime.strptime(x, '%M:%S'))
-    #df.best_pace = df.best_pace.dt.time
+    df.best_pace = df.best_pace.apply(lambda x: x.strftime('%H:%M:%S'))
+    df.best_pace = pd.to_timedelta(df.best_pace)
     df.avg_pace = df.avg_pace.apply(lambda x: dt.datetime.strptime(x, '%M:%S'))
-    #df.avg_pace = df.avg_pace.dt.time
+    df.avg_pace = df.avg_pace.apply(lambda x: x.strftime('%H:%M:%S'))
+    df.avg_pace = pd.to_timedelta(df.avg_pace)
     return df
 
 def clean_bike_pace(df):
@@ -89,7 +108,7 @@ def download_to_raw():
     activities_df_downloaded = pd.read_csv(activities_csv_downloaded)
     activities_df_raw = pd.read_csv(activities_csv_raw)
     activities_df_raw = pd.concat([activities_df_downloaded, activities_df_raw]).drop_duplicates(subset='Date')
-    activities_df_raw.to_csv(activities_csv_raw)
+    activities_df_raw.to_csv(activities_csv_raw, index=False)
     os.remove(activities_csv_downloaded)
 
 def prep_df(df):
@@ -102,13 +121,14 @@ def prep_df(df):
     return df
 
 def clean_time(df):
-    df.time = df.time.apply(lambda x: x.split('.')[0])
-    df.time = df.time.apply(lambda x: dt.datetime.strptime(x, '%H:%M:%S'))
+    df.time = pd.to_timedelta(df.time)
+    #df.time = df.time.apply(lambda x: x.split('.')[0])
+    #df.time = df.time.apply(lambda x: dt.datetime.strptime(x, '%H:%M:%S'))
     #df.time = df.time.dt.time
     return df
 
 def cols_to_float(df):
-    df.calories.str.replace(',', '').astype(float)
+    df.calories = df.calories.str.replace(',', '').astype(float)
     df.iloc[:, 5:10] = df.iloc[:, 5:10].replace('--', '0')
     df.iloc[:, 5:10] = df.iloc[:, 5:10].astype(float)
     return df
