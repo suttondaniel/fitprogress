@@ -44,10 +44,10 @@ def main():
 
     if activity_choice == activity_choice:
         numtimes = strava_activities[strava_activities.sport_type == activity_choice].shape[0]
-        st.markdown(f'###You\'ve ran {numtimes} over the past year. ')
         em = pd.read_json(emojis, orient='index')
         em = list(em.index)
         emojis = np.random.choice(em, 3)
+        st.markdown(f'### You\'ve {activity_choice} {numtimes} times over the past 3 years :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
 
         # st.markdown(f'# Running :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
         # st.subheader(f'Select a distance to see your top 5 efforts: ')
