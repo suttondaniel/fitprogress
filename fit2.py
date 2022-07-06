@@ -69,7 +69,10 @@ def main():
     choice = st.selectbox('Select the time frame you want to see your totals for', ['W-Mon', 'M', 'Y'])
 
     #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
-    st.dataframe(strava_activities_clean[strava_activities_clean['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(15))
+    df_slice = strava_activities_clean[strava_activities_clean['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(15)
+    df_slice.index = df_slice.index.strftime('%B %Y')
+    #df_slice.index = df_slice.index.strftime('Week of %A, %b %d')
+    st.dataframe(df_slice)
 
         # st.markdown(f'# Running :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
         # st.subheader(f'Select a distance to see your top 5 efforts: ')
