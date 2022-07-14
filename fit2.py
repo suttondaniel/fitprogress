@@ -9,6 +9,7 @@ import requests
 import json
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+pd.options.mode.chained_assignment = None
 
 import streamlit as st
 import time
@@ -17,7 +18,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 #import matplotlib.pyplot as plt
 
-pd.options.mode.chained_assignment = None
+
 
 def main():
     # render the readme as markdown using st.markdown
@@ -32,7 +33,6 @@ def main():
     'upload_id_str', 'external_id', 'from_accepted_tag', 'total_photo_count', 'athlete.resource_state', 'map.id', 'map.summary_polyline', 'map.resource_state', 
     'average_watts', 'kilojoules', 'device_watts', 'photo_count', 'heartrate_opt_out', 'upload_id', 'athlete.id', 'workout_type',
     'has_heartrate', 'location_city', 'location_state', 'location_country', 'private', 'has_kudoed', 'Unnamed: 0']
-
 
     strava_activities_clean = strava_activities_raw.drop(labels=cols_to_drop, axis=1)
 
@@ -54,25 +54,47 @@ def main():
     strava_activities_clean.set_index('start_time', inplace=True)
 
     types_of_activities = strava_activities_clean.sport_type.unique()
-    activity_choice = st.sidebar.selectbox('Select an activity', types_of_activities)
 
-    
+    row0_spacer1, row0_1, row0_spacer2, row0_2, row0_spacer3 = st.columns(
+    (.1, 2, .2, 1, .1))
+
+    row0_1.title('Strava Dashboard')
+    row0_2.subheader('A Strava dashboard by [Dan Sutton](https://github.com/suttondaniel)')
+
+    with row0_2:
+        st.write('')
+        # adding some spacing
+
+    row1_spacer1, row1_1, row1_spacer2 = st.columns((.1, 3.2, .1))
 
 
-    if activity_choice == activity_choice:
-        numtimes = strava_activities_clean[strava_activities_clean.sport_type == activity_choice].shape[0]
-        em = pd.read_json(emojis, orient='index')
-        em = list(em.index)
-        emojis = np.random.choice(em, 3)
-        st.markdown(f'### You\'ve {activity_choice} {numtimes} times over the past 3 years :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
 
+    with row1_1:
+        st.markdown("**To begin, select an activity:**")
+        activity_choice = st.selectbox(" ", types_of_activities)
+
+
+
+
+    # TALLY HOW MANY TIMES YOU DID THE ACTIVITY
+    # if activity_choice == activity_choice:
+    #     numtimes = strava_activities_clean[strava_activities_clean.sport_type == activity_choice].shape[0]
+    #     em = pd.read_json(emojis, orient='index')
+    #     em = list(em.index)
+    #     emojis = np.random.choice(em, 3)
+    #     st.markdown(f'### You\'ve {activity_choice} {numtimes} times over the past 3 years :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
+
+    # ACTIVITY TOTALS BY EITHER MONTH, YR, OR WEEK
     choice = st.selectbox('Select the time frame you want to see your totals for', ['W-Mon', 'M', 'Y'])
 
-    #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
-    df_slice = strava_activities_clean[strava_activities_clean['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(15)
-    df_slice.index = df_slice.index.strftime('%B %Y')
-    #df_slice.index = df_slice.index.strftime('Week of %A, %b %d')
+    # #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
+    df_slice = strava_activities_clean[strava_activities_clean['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(5)
+    #df_slice.index = df_slice.index.strftime('%B %Y')
+    df_slice.index = df_slice.index.strftime('Week of %A, %b %d')
     st.dataframe(df_slice)
+
+
+    st.dataframe(strava_activities_clean.head(10))
 
         # st.markdown(f'# Running :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
         # st.subheader(f'Select a distance to see your top 5 efforts: ')
