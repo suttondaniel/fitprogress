@@ -55,24 +55,24 @@ def main():
 
     types_of_activities = strava_activities_clean.sport_type.unique()
 
-    row0_spacer1, row0_1, row0_spacer2, row0_2, row0_spacer3 = st.columns(
-    (.1, 2, .2, 1, .1))
+    runs = strava_activities_clean[strava_activities_clean['sport_type'] == 'Run']
+    runs_2022 = runs[runs.index.year == 2022]
 
-    row0_1.title('Strava Dashboard')
-    row0_2.subheader('A Strava dashboard by [Dan Sutton](https://github.com/suttondaniel)')
+    st.title('Strava Dashboard')
+    st.subheader('A Strava dashboard by [Dan Sutton](https://github.com/suttondaniel)')
 
-    with row0_2:
-        st.write('')
-        # adding some spacing
+    miles_run = runs_2022.distance.sum()
+    elev_gain = runs_2022.total_elevation_gain.sum()
+    mpd = runs_2022.distance.sum() / runs_2022.index[0].day_of_year
+    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Miles Ran", miles_run, "-$1.25")
+    col2.metric("Elevation Gain", elev_gain, "0.46%")
+    col3.metric("Miles Per Day", mpd, "+4.87%")
 
-    row1_spacer1, row1_1, row1_spacer2 = st.columns((.1, 3.2, .1))
-
-
-
-    with row1_1:
-        st.markdown("**To begin, select an activity:**")
-        activity_choice = st.selectbox(" ", types_of_activities)
-
+        
+    st.markdown("**To begin, select an activity:**")
+    activity_choice = st.selectbox(" ", types_of_activities)
 
 
 
