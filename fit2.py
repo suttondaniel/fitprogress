@@ -18,14 +18,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 #import matplotlib.pyplot as plt
 
-
-
-def main():
-    # render the readme as markdown using st.markdown
-    p = Path.home()
-    emojis = str(p / 'Documents' / 'Python' / 'fitprogress' / 'data' / 'emoji.json')
-
-    #st.markdown(open(readme).read())
+def prepare_data():
     strava_activities_raw = pd.read_csv('strava_activities.csv')
 
     cols_to_drop = ['Unnamed: 0.1', 'athlete', 'resource_state', 'start_date_local', 'timezone', 
@@ -39,6 +32,7 @@ def main():
     # meters to miles
     strava_activities_clean['distance'] = strava_activities_clean.distance * .000621
 
+    # search results for my pace (pick a pace, any pace) and see my suffering go down over time
     # might be a fun metric to plot over time. perhaps my suffering per minute has gone down as ive gotten fitter
     strava_activities_clean['SPM'] = strava_activities_clean.suffer_score / (strava_activities_clean.moving_time / 60)
 
@@ -53,9 +47,19 @@ def main():
 
     strava_activities_clean.set_index('start_time', inplace=True)
 
-    types_of_activities = strava_activities_clean.sport_type.unique()
+    return strava_activities_clean
 
-    runs = strava_activities_clean[strava_activities_clean['sport_type'] == 'Run']
+
+def main():
+    # render the readme as markdown using st.markdown
+    p = Path.home()
+    emojis = str(p / 'Documents' / 'Python' / 'fitprogress' / 'data' / 'emoji.json')
+
+    activities = prepare_data()
+
+    types_of_activities = activities.sport_type.unique()
+
+    runs = activities[activities['sport_type'] == 'Run']
     runs_2022 = runs[runs.index.year == 2022]
 
     st.title('Strava Dashboard')
@@ -66,16 +70,31 @@ def main():
     mpd = runs_2022.distance.sum() / runs_2022.index[0].day_of_year
     
     col1, col2, col3 = st.columns(3)
-    col1.metric("Miles Ran", miles_run, "-$1.25")
-    col2.metric("Elevation Gain", elev_gain, "0.46%")
-    col3.metric("Miles Per Day", mpd, "+4.87%")
 
-        
-    st.markdown("**To begin, select an activity:**")
-    activity_choice = st.selectbox(" ", types_of_activities)
+    # you can pass in a percentage or $ amt as a second variable to show growth or shrinkage over time
+
+    #col1.metric("Miles Ran", miles_run, "-$1.25")
+    col1.metric("Miles Ran (YTD)", round(miles_run, 2))
+    col2.metric("Elevation Gain (YTD)", round(elev_gain, 2))
+    col3.metric("Miles Per Day", round(mpd, 2))
+
+    st.markdown("### Last 5 Activities: ")
+    st.dataframe(activities.head(5))
+
+    activity_choice = st.sidebar.selectbox('Select an activity', types_of_activities)
+           
+    if activity_choice == 'Run':
+        choice = st.radio('Select the time frame you want to see your totals for', ['W-Mon', 'M', 'Y'])
+
+        # #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
+        df_slice = activities[activities['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(5)
+        #df_slice.index = df_slice.index.strftime('%B %Y')
+        df_slice.index = df_slice.index.strftime('Week of %A, %b %d')
+        st.dataframe(df_slice)
 
 
-
+    
+    
     # TALLY HOW MANY TIMES YOU DID THE ACTIVITY
     # if activity_choice == activity_choice:
     #     numtimes = strava_activities_clean[strava_activities_clean.sport_type == activity_choice].shape[0]
@@ -83,18 +102,6 @@ def main():
     #     em = list(em.index)
     #     emojis = np.random.choice(em, 3)
     #     st.markdown(f'### You\'ve {activity_choice} {numtimes} times over the past 3 years :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
-
-    # ACTIVITY TOTALS BY EITHER MONTH, YR, OR WEEK
-    choice = st.selectbox('Select the time frame you want to see your totals for', ['W-Mon', 'M', 'Y'])
-
-    # #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
-    df_slice = strava_activities_clean[strava_activities_clean['sport_type'] == activity_choice].resample(choice, closed='left').distance.sum().tail(5)
-    #df_slice.index = df_slice.index.strftime('%B %Y')
-    df_slice.index = df_slice.index.strftime('Week of %A, %b %d')
-    st.dataframe(df_slice)
-
-
-    st.dataframe(strava_activities_clean.head(10))
 
         # st.markdown(f'# Running :{emojis[0]}::{emojis[1]}::{emojis[2]}:')
         # st.subheader(f'Select a distance to see your top 5 efforts: ')
