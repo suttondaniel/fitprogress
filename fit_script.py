@@ -1,23 +1,15 @@
 import pandas as pd
 from get_data import prepare_data
-#pd.options.display.max_rows = 999
 
-#import time
-#import datetime as dt
-#import numpy as np
+
 from pathlib import Path
-#import requests
-#import json
+
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 pd.options.mode.chained_assignment = None
 
 import streamlit as st
-#import time
 
-#import plotly.express as px
-#import plotly.graph_objs as go
-#import matplotlib.pyplot as plt
 
 def main():
     # render the readme as markdown using st.markdown
@@ -31,8 +23,7 @@ def main():
     runs = activities[activities['sport_type'] == 'Run']
     runs_2022 = runs[runs.index.year == 2022]
 
-    st.title('Strava Dashboard')
-    st.subheader('A Strava dashboard by [Dan Sutton](https://github.com/suttondaniel)')
+    st.title('Running Dashboard')
 
     miles_run = runs_2022.distance.sum()
     elev_gain = runs_2022.total_elevation_gain.sum()
@@ -47,16 +38,13 @@ def main():
     col2.metric("Elevation Gain (YTD)", round(elev_gain, 2))
     col3.metric("Miles Per Day", round(mpd, 2))
 
-    st.markdown("### Last 5 Activities: ")
-    st.dataframe(activities.head(5), width=3000)
-
     activity_choice = st.sidebar.selectbox('Select an activity', types_of_activities)
            
     if activity_choice == 'Run':
         choices = {'W-Mon': '%A, %b %d %Y', 'M': '%B %Y', 'Y': '%Y'}
         choices_txt = {'By Week': 'W-Mon', 'By Month': 'M', 'By Year': 'Y'}
 
-        choice_selector = st.radio('Select the time frame you want to see your totals for', choices_txt.keys())
+        choice_selector = st.radio('Totals by Week, Month, or Year', choices_txt.keys())
         choice = choices_txt[choice_selector]
 
         # #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
@@ -64,6 +52,12 @@ def main():
         #df_slice.index = df_slice.index.strftime('%B %Y')
         df_slice.index = df_slice.index.strftime(choices[choice])
         st.dataframe(df_slice)
+
+                # #strava_activities_clean[strava_activities_clean['sport_type'] == 'Run'].resample('W-Mon', closed='left').distance.sum().tail(15)
+        df_slice_2 = activities[activities['sport_type'] == activity_choice].resample(choice, closed='left')[['distance', 'total_elevation_gain']].sum().tail(5)
+        #df_slice.index = df_slice.index.strftime('%B %Y')
+        df_slice_2.index = df_slice_2.index.strftime(choices[choice])
+        st.dataframe(df_slice_2)
 
 
     
