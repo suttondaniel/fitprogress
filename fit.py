@@ -1,5 +1,6 @@
 import pandas as pd
 from get_data import prepare_data
+from api_calls import get_strava_data
 #pd.options.display.max_rows = 999
 
 #import time
@@ -23,8 +24,8 @@ def main():
     # render the readme as markdown using st.markdown
     p = Path.home()
     emojis = str(p / 'Documents' / 'Python' / 'fitprogress' / 'data' / 'emoji.json')
-
-    activities = prepare_data()
+    activities_raw = pd.read_csv('strava_activities.csv')
+    activities = prepare_data(activities_raw)
 
     types_of_activities = activities.sport_type.unique()
 
@@ -32,8 +33,17 @@ def main():
     runs_2022 = runs[runs.index.year == 2022]
 
     st.title('Strava Dashboard')
-    st.subheader('A Strava dashboard by [Dan Sutton](https://github.com/suttondaniel)')
+    button = st.button("Get Strava Data", key=None, help="Click here to get new Strava data")
+    if button:
+        # this is all code copied from above...I should probably break this out into a function
 
+        activities_raw = get_strava_data('strava_activities.csv')
+        activities = prepare_data(activities_raw)
+
+        types_of_activities = activities.sport_type.unique()
+
+        runs = activities[activities['sport_type'] == 'Run']
+        runs_2022 = runs[runs.index.year == 2022]
     miles_run = runs_2022.distance.sum()
     elev_gain = runs_2022.total_elevation_gain.sum()
     mpd = runs_2022.distance.sum() / runs_2022.index[0].day_of_year
