@@ -9,8 +9,9 @@ def get_float_coords(elem):
     converts the latitude / longitude from a string that looks like a list to a functioning list of two floats
     '''
     try:
-        return [float(coord) for coord in elem.split('[')[1].split(']')[0].split(',')]
-    except ValueError:
+        #return [float(coord) for coord in elem]  # the start_latlng column seems to be treated as a string in some records and a list in others
+        return [float(coord) for coord in elem.split('[')[1].split(']')[0].split(',')]      # with more of the recs being strings
+    except (ValueError, AttributeError) as e: 
         return np.nan
 
 def prepare_data(df):
@@ -33,7 +34,6 @@ def prepare_data(df):
 
     strava_activities_clean['start_latlng'] = strava_activities_clean['start_latlng'].apply(get_float_coords)
 
-    # search results for my pace (pick a pace, any pace) and see my suffering go down over time
     # might be a fun metric to plot over time. perhaps my suffering per minute has gone down as ive gotten fitter
     strava_activities_clean['SPM'] = strava_activities_clean.suffer_score / (strava_activities_clean.moving_time / 60)
 

@@ -4,6 +4,11 @@ import time
 import json
 
 def get_strava_data(csv_file):
+    '''
+    I need to repurpose this for the cloud; it should need to take in a .csv in order to output a .csv
+    but those are the least of my worrieS;  get a PoC by uploading a .csv to BQ via an offline script first
+    then find a way to do it with a cloud function later
+    '''
     with open('strava_tokens.json') as json_file:
         strava_tokens = json.load(json_file)
 
