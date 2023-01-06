@@ -71,7 +71,7 @@ client.load_table_from_dataframe(new_activities, table)
 ```
 
 ### 4) Connect the BigQuery data source to Tableau and visualize away: 
-![dashboard](https://github.com/suttondaniel/fitprogress/blob/master/images/strava_db_1_6_23.png)
+![dashboard](https://raw.githubusercontent.com/suttondaniel/fitprogress/blob/master/images/strava_db_1_6_23.png)
 
 
 
