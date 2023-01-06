@@ -3,3 +3,5 @@ archive/
 images/
 data/
 fit.ipynb
+clean_data.py
+*.csv
